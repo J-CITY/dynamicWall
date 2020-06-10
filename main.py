@@ -59,7 +59,7 @@ class Main(QWebEngineView):
         crypticParams = (0x52c, 0, 0, win32con.SMTO_NORMAL, 0x3e8, None)
         user32.SendMessageTimeoutW(workerW, *crypticParams)
         win32gui.EnumWindows(EnumWindowsProc(), None)
-        win32gui.ShowWindow(_WORKERW, win32con.SW_HIDE)
+        win32gui.ShowWindow(_WORKERW, win32con.SW_SHOW)
         
         viewId = self.winId()
 
