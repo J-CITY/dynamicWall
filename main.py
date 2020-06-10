@@ -11,6 +11,10 @@ import time
 
 import ctypes
 from typing import List
+from ctypes.wintypes import HWND
+
+user32 = ctypes.windll.user32
+
 _WORKERW = None
 
 def EnumWindowsProc():
@@ -51,10 +55,9 @@ class Main(QWebEngineView):
             return []
 
     def initUI(self):
-        self.load(QUrl('https://www.google.com/'))
         workerW = self._findWindowHandles(windowClass='Progman')[0]
-        crypticParams = (0x52c, 0, 0, win32con.SMTO_NORMAL, 0x3e8)
-        win32gui.SendMessageTimeout(workerW, *crypticParams)
+        crypticParams = (0x52c, 0, 0, win32con.SMTO_NORMAL, 0x3e8, None)
+        user32.SendMessageTimeoutW(workerW, *crypticParams)
         win32gui.EnumWindows(EnumWindowsProc(), None)
         win32gui.ShowWindow(_WORKERW, win32con.SW_HIDE)
         
@@ -63,8 +66,10 @@ class Main(QWebEngineView):
         win32gui.GetWindowLong(viewId, win32con.GWL_STYLE)
         win32gui.SetParent(viewId, workerW)
         win32gui.SetWindowPos(viewId, win32con.HWND_TOP, 0,0,0,0, \
-            win32con.WS_EX_LEFT|win32con.WS_EX_LTRREADING|win32con.WS_EX_RIGHTSCROLLBAR)#|win32con.WS_EX_NOACTIVATE)
+            win32con.WS_EX_LEFT|win32con.WS_EX_LTRREADING|win32con.WS_EX_RIGHTSCROLLBAR|win32con.SWP_NOACTIVATE)
         
+        self.load(QUrl('https://www.google.com/'))
+        self.showFullScreen()
         self.show()
         
 app = QApplication(sys.argv)
