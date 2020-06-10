@@ -6,23 +6,37 @@ import datetime
 from enum import Enum
 import time
 
+import ctypes
+from typing import List
+
+import pythoncom
+import pywintypes
+import win32gui
+from win32com.shell import shell, shellcon
+
+user32 = ctypes.windll.user32
+
 class Type(Enum):
     RANDOM = 1
     STEP_BY_STEP = 2
     TIME = 3
 
 class DinamicWall:
-    UPDATE_TIME_SEC = 10
-    TYPE = Type.TIME
-    DIR_PATH = "C:/Users/Daniil (WORK)/Desktop/dynamicWall/wall/1"
+    UPDATE_TIME_SEC = 60
+    TYPE = Type.RANDOM
+    DIR_PATH = "C:/Customization/Wallpapers"
+    IS_SMOOTH = True
 
     def __init__(self):
         self.images = []
         self.curImageId = 0
 
     def _setWallWindows(self, path):
-        SPI_SETDESKWALLPAPER = 20 
-        ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, path , 0)
+        if not self.IS_SMOOTH:
+            SPI_SETDESKWALLPAPER = 20 
+            ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, path , 0)
+        else:
+            self._setWallpaper(path)
 
     def _setWallLinux(self, path):
         os.system("feh --bg-scale " + path)
@@ -90,6 +104,49 @@ class DinamicWall:
             self.stepByStepWall()
         time.sleep(self.UPDATE_TIME_SEC)
 
+    def _makeFilter(self, className: str, title: str):
+        def enumWindows(handle: int, h_list: list):
+            if not (className or title):
+                h_list.append(handle)
+            if className and className not in win32gui.GetClassName(handle):
+                return True  # continue enumeration
+            if title and title not in win32gui.GetWindowText(handle):
+                return True  # continue enumeration
+            h_list.append(handle)
+        return enumWindows
+
+    def _findWindowHandles(self, parent: int = None, windowClass: str = None, title: str = None) -> List[int]:
+        cb = self._makeFilter(windowClass, title)
+        try:
+            handle_list = []
+            if parent:
+                win32gui.EnumChildWindows(parent, cb, handle_list)
+            else:
+                win32gui.EnumWindows(cb, handle_list)
+            return handle_list
+        except pywintypes.error:
+            return []
+
+    def _enableActivedesktop(self):
+        try:
+            progman = self._findWindowHandles(windowClass='Progman')[0]
+            crypticParams = (0x52c, 0, 0, 0, 500, None)
+            user32.SendMessageTimeoutW(progman, *crypticParams)
+        except IndexError as e:
+            raise WindowsError('Cannot enable Active Desktop') from e
+
+    def _setWallpaper(self, imagePath: str, useActivedesktop: bool = True):
+        if useActivedesktop:
+            self._enableActivedesktop()
+        pythoncom.CoInitialize()
+        iad = pythoncom.CoCreateInstance(shell.CLSID_ActiveDesktop,
+                                         None,
+                                         pythoncom.CLSCTX_INPROC_SERVER,
+                                         shell.IID_IActiveDesktop)
+        iad.SetWallpaper(str(imagePath), 0)
+        iad.ApplyChanges(shellcon.AD_APPLY_ALL)
+        
+        user32.UpdatePerUserSystemParameters(1)
 
 
 dw = DinamicWall()
