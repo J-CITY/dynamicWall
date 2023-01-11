@@ -114,7 +114,7 @@ def addWeatherWidget(img, x, y):
     import requests, json
     BASE_URL = "https://api.openweathermap.org/data/2.5/weather?"
     CITY = Config.city
-    API_KEY = "84294f4788bfcb9137bdb2413c3f983c"
+    API_KEY = ""
     #URL = BASE_URL + "q=" + CITY + "&appid=" + API_KEY
     response = requests.get(BASE_URL, params={'q': CITY, 'units': 'metric', 'lang': 'en', 'APPID': API_KEY})
     # Sending HTTP request
