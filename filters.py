@@ -170,6 +170,7 @@ def addWeatherWidget(img, x, y):
     return img
 
 
-res = addWeatherWidget(bright(cv2.imread('./w.jpg'), -50), 50, 500)
-cv2.imwrite('out.png', res)
-#cv2.imshow("image", res);
+if __name__ == "__main__":
+    res = addWeatherWidget(bright(cv2.imread('./w.jpg'), -50), 50, 500)
+    cv2.imwrite('out.png', res)
+
